@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 import ru.iu3.fclient.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TransactionEvents{
 
     // Used to load the 'fclient' library on application startup.
     static {
@@ -32,7 +32,26 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     ActivityResultLauncher activityResultLauncher;
-    private String info;
+    private String pin;
+
+    public native boolean transaction(byte[] trd);
+
+    @Override
+    public String enterPin(int ptc, String amount) {
+        pin = new String();
+        Intent it = new Intent(MainActivity.this, PinpadActivity.class);
+        it.putExtra("ptc", ptc);
+        it.putExtra("amount", amount);
+        synchronized (MainActivity.this) {
+            activityResultLauncher.launch(it);
+            try {
+                MainActivity.this.wait();
+            } catch (Exception ex) {
+                //todo: log error
+            }
+        }
+        return pin;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,31 +61,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         initRng();
-/*
-        String s_key = "key is a 16 char";
-        String original = new String("rpo 2022");
 
-        byte[] key = s_key.getBytes(StandardCharsets.UTF_8);
-
-        byte[] encrypted = encrypt(key, original.getBytes());
-        String decrypted = new String(decrypt(key, encrypted));
-
-        Log.d("mbedcrypto", "ORIGINAL: " + original + " / BYTES " + original.getBytes());
-        Log.d("mbedcrypto", "KEY: " + s_key+ " / " + Arrays.toString(key) + " / LENGTH " + key.length);
-        Log.d("mbedcrypto", "ENCRYPTED: " + Arrays.toString(encrypted));
-        Log.d("mbedcrypto", "DECRYPTED: " + decrypted);
-
-        info = stringFromJNI()+"\nencrypted "+ Arrays.toString(encrypted)+"\ndecrypted "+decrypted;
-
- */     activityResultLauncher = registerForActivityResult(
+        activityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult> () {
                     @Override
                     public void onActivityResult(ActivityResult result) {
                         if (result.getResultCode() == Activity.RESULT_OK) {
                             Intent data = result.getData();
-                            String pin = data.getStringExtra("pin");
-                            Toast.makeText(MainActivity.this, pin, Toast.LENGTH_SHORT).show();
+                            pin = data.getStringExtra("pin");
+                            synchronized (MainActivity.this){
+                                MainActivity.this.notifyAll();
+                            }
+                            //Toast.makeText(MainActivity.this, pin, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -88,9 +95,26 @@ public class MainActivity extends AppCompatActivity {
 
     public void onButtonClick(View v)
     {
-        Intent it = new Intent(this, PinpadActivity.class);
-        //startActivity(it);
-        activityResultLauncher.launch(it);
+/*        new Thread(()-> {
+            try {
+                byte[] trd = stringToHex("9F0206000000000100");
+                boolean ok = transaction(trd);
+                runOnUiThread(()-> {
+                    Toast.makeText(MainActivity.this, ok ? "ok" : "failed", Toast.LENGTH_SHORT).show();
+                });
+            } catch (Exception ex) {
+                // todo: log error
+            }
+        }).start(); */
+        byte[] trd = stringToHex("9F0206000000000100");
+        transaction(trd);
+    }
+
+    @Override
+    public void transactionResult(boolean result) {
+        runOnUiThread(()-> {
+            Toast.makeText(MainActivity.this, result ? "ok" : "failed", Toast.LENGTH_SHORT).show();
+        });
     }
 
     /**
