@@ -23,6 +23,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.iu3.fclient.databinding.ActivityMainBinding;
 
@@ -143,14 +145,13 @@ public class MainActivity extends AppCompatActivity implements TransactionEvents
 
     protected String getPageTitle(String html)
     {
-        int pos = html.indexOf("<title");
-        String p="not found";
-        if (pos >= 0)
-        {
-            int pos2 = html.indexOf("<", pos + 1);
-            if (pos >= 0)
-                p = html.substring(pos + 7, pos2);
-        }
+        Pattern pattern = Pattern.compile("<title>(.+?)</title>", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(html);
+        String p;
+        if (matcher.find())
+            p = matcher.group(1);
+        else
+            p = "Not found";
         return p;
     }
 

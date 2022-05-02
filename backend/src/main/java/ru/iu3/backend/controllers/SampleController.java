@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class SampleController {
     @GetMapping("/title")
     public String getTitle() {
-        return "<title>Hello from Back-end</title>";
+        return "<title>Hello from Back-end</title>\nThis page is returned by getTitle() method.";
     }
 }
