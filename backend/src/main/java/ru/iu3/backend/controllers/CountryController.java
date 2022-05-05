@@ -9,6 +9,7 @@ import ru.iu3.backend.models.Artist;
 import ru.iu3.backend.models.Country;
 import ru.iu3.backend.repositories.CountryRepository;
 
+import javax.validation.Valid;
 import java.util.*;
 
 @RestController
@@ -42,7 +43,7 @@ public class CountryController {
     }
 
     @PutMapping("/countries/{id}")
-    public ResponseEntity<Country> updateCountry(@PathVariable(value = "id") Long countryId, @RequestBody Country countryDetails) {
+    public ResponseEntity<Country> updateCountry(@PathVariable(value = "id") Long countryId, @Valid @RequestBody Country countryDetails) {
         Country country = null;
         Optional<Country>
                 cc = countryRepository.findById(countryId);

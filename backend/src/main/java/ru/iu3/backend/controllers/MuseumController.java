@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
 import java.util.*;
 
 @RestController
@@ -23,7 +24,7 @@ public class MuseumController {
     }
 
     @PostMapping("/museums")
-    public ResponseEntity<Object> createMuseum(@Validated @RequestBody Museum museum) throws ResponseStatusException {
+    public ResponseEntity<Object> createMuseum(@Valid @RequestBody Museum museum) throws ResponseStatusException {
         try {
             Museum nc = museumRepository.save(museum);
             return ResponseEntity.ok(nc);
