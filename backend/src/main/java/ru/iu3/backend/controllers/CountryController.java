@@ -5,13 +5,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.iu3.backend.models.Artist;
 import ru.iu3.backend.models.Country;
 import ru.iu3.backend.repositories.CountryRepository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -34,7 +32,7 @@ public class CountryController {
         catch(Exception ex) {
             String error;
             if (ex.getMessage().contains("countries.name_UNIQUE"))
-                error = "countyalreadyexists";
+                error = "countryalreadyexists";
             else
                 error = "undefinederror";
             Map<String, String> map = new HashMap<>();
@@ -69,5 +67,14 @@ public class CountryController {
     else
             resp.put("deleted", Boolean.FALSE);
     return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/countries/{id}/artists")
+    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) {
+            Optional<Country> cc = countryRepository.findById(countryId);
+            if (cc.isPresent()) {
+                return ResponseEntity.ok(cc.get().artists);
+            }
+            return ResponseEntity.ok(new ArrayList<Artist>());
     }
 }
