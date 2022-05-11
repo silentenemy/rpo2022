@@ -5,6 +5,10 @@ import { faHome, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, Link } from 'react-router-dom';
 import Utils from "../utils/Utils";
 
+import {useDispatch, connect} from "react-redux";
+import {userActions} from "../utils/Rdx";
+import BackendService from "../services/BackendService";
+
 const NavigationBar = (props) => {
     let navigate = useNavigate();
     let uname = Utils.getUserName();
