@@ -9,6 +9,9 @@ import ru.iu3.backend.models.Artist;
 import ru.iu3.backend.models.Country;
 import ru.iu3.backend.repositories.CountryRepository;
 import ru.iu3.backend.tools.DataValidationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -21,8 +24,8 @@ public class CountryController {
     CountryRepository countryRepository;
 
     @GetMapping("/countries")
-    public List getAllCountries() {
-        return countryRepository.findAll();
+    public Page<Country> getAllCountries(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return countryRepository.findAll(PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name")));
     }
 
     @PostMapping("/countries")

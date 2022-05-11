@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import com.example.backend.tools.DataValidationException;
+import com.example.backend.tools.Utils;
+ import org.springframework.security.crypto.codec.Hex;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -28,6 +31,15 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @GetMapping("/users/{id}")
+    public ResponseEntity<User> getUser(@PathVariable(value = "id") Long userId)
+            throws DataValidationException
+    {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new DataValidationException("Пользователь с таким индексом не найдена"));
+        return ResponseEntity.ok(user);
+    }
+
     @PostMapping("/users")
     public ResponseEntity<Object> createUser(@Valid @RequestBody User user) throws ResponseStatusException{
         try {
@@ -44,17 +56,28 @@ public class UserController {
 
     @PutMapping("/users/{id}")
     public ResponseEntity<User> updateUser(@PathVariable(value = "id") Long userId,
-                                           @RequestBody User userDetails) {
-        User user = null;
-        Optional uu = userRepository.findById(userId);
-        if (uu.isPresent()) {
-            user = (User) uu.get();
-            user.login = userDetails.login;
+                                           @Valid @RequestBody User userDetails) throws DataValidationException {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new DataValidationException("Пользователь с таким индексом не найден"));
             user.email = userDetails.email;
+            String np = userDetails.np;
+            if (np != null && !np.isEmpty()) {
+                byte[] b = new byte[32];
+                new Random().nextBytes(b);
+                String salt = new String(Hex.encode(b));
+                user.password = Utils.ComputeHash(np, salt);
+                user.salt = salt;
+            }
             userRepository.save(user);
             return ResponseEntity.ok(user);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found");
+        }
+        catch (Exception ex) {
+            String error;
+            if (ex.getMessage().contains("users.email_UNIQUE"))
+                throw new DataValidationException("Пользователь с такой почтой уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
